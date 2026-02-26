@@ -1,0 +1,25 @@
+proxies:
+  - name: AWS-Reality
+    type: vless
+    server: 43.206.96.24
+    port: 443
+    uuid: c438a7fd-27ce-4a3b-8f84-e3f0ce282051
+    network: tcp
+    tls: true
+    udp: true
+    client-fingerprint: chrome
+    flow: xtls-rprx-vision
+    servername: www.cloudflare.com
+
+    reality-opts:
+      public-key: Dd6_aiROPgu9IpEf9tdqJw_ZmqtQ6AQs4PIE72ZQXFo
+      short-id: 0123456789abcdef
+
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - AWS-Reality
+
+rules:
+  - MATCH,Proxy
