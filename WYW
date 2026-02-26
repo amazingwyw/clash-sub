@@ -1,5 +1,5 @@
 proxies:
-  - name: AWS-Reality
+  - name: AWS-JP
     type: vless
     server: 43.206.96.24
     port: 443
@@ -19,7 +19,7 @@ proxy-groups:
   - name: Proxy
     type: select
     proxies:
-      - AWS-Reality
+      - AWS-JP
 
 rules:
   - MATCH,Proxy
