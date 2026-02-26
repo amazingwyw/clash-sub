@@ -1,5 +1,5 @@
 proxies:
-  - name: AWS-JP
+  - name: AWS-Reality
     type: vless
     server: 43.206.96.24
     port: 443
