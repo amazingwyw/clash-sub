@@ -36,9 +36,6 @@ proxies:
 
 rules:
 
-  # 禁止 QUIC（防止绕过）
-  - AND,((NETWORK,udp),(DST-PORT,443)),REJECT
-
   # 局域网直连
   - IP-CIDR,127.0.0.0/8,DIRECT
   - IP-CIDR,10.0.0.0/8,DIRECT
