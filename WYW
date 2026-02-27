@@ -1,5 +1,25 @@
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: warning
+ipv6: false
+
+dns:
+  enable: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
+    - 1.1.1.1
+    - 8.8.8.8
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+
 proxies:
-  - name: AWS-JP
+  - name: VPS
     type: vless
     server: 43.206.96.24
     port: 443
@@ -10,7 +30,6 @@ proxies:
     client-fingerprint: chrome
     flow: xtls-rprx-vision
     servername: www.cloudflare.com
-
     reality-opts:
       public-key: Dd6_aiROPgu9IpEf9tdqJw_ZmqtQ6AQs4PIE72ZQXFo
       short-id: 0123456789abcdef
@@ -19,7 +38,25 @@ proxy-groups:
   - name: Proxy
     type: select
     proxies:
-      - AWS-JP
+      - VPS
+      - DIRECT
 
 rules:
+
+  # 禁止 QUIC（提高稳定性）
+  - AND,((NETWORK,udp),(DST-PORT,443)),REJECT
+
+  # 局域网直连
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+
+  # 中国网站直连
+  - GEOSITE,CN,DIRECT
+
+  # 中国IP直连
+  - GEOIP,CN,DIRECT
+
+  # 其余全部走代理
   - MATCH,Proxy
