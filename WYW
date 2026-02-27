@@ -1,22 +1,95 @@
 mixed-port: 7890
 allow-lan: true
+bind-address: '*'
 mode: rule
-log-level: warning
+log-level: info
 ipv6: false
+find-process-mode: strict
+external-controller: '127.0.0.1:9090'
+profile:
+  store-selected: true
+  store-fake-ip: true
+unified-delay: true
+tcp-concurrent: true
+global-client-fingerprint: chrome
+
+ntp:
+  enable: true
+  write-to-system: false
+  server: ntp.aliyun.com
+  port: 123
+  interval: 30
+
+sniffer:
+  enable: true
+  force-dns-mapping: false
+  parse-pure-ip: false
 
 dns:
   enable: true
+  listen: ':53'
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  prefer-h3: false
+  respect-rules: true
+  use-hosts: false
+  use-system-hosts: false
+  ipv6: false
+  fake-ip-filter:
+    - '*.lan'
+    - '*.local'
+    - '*.arpa'
+    - 'time.*.com'
+    - 'ntp.*.com'
+    - '*.msftncsi.com'
+    - www.msftconnecttest.com
+  default-nameserver:
+    - system
+    - 223.6.6.6
+    - 8.8.8.8
   nameserver:
+    - 'https://doh.pub/dns-query'
+    - 'https://dns.alidns.com/dns-query'
+    - 8.8.8.8
+  direct-nameserver:
+    - 'https://doh.pub/dns-query'
+    - 'https://dns.alidns.com/dns-query'
     - 223.5.5.5
     - 119.29.29.29
+  direct-nameserver-follow-policy: true
   fallback:
-    - 1.1.1.1
-    - 8.8.8.8
+    - 'https://1.1.1.1/dns-query'
+    - 'https://8.8.8.8/dns-query'
+    - 'https://dns.google/dns-query'
   fallback-filter:
     geoip: true
     geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+      - 0.0.0.0/32
+    domain:
+      - +.google.com
+      - +.facebook.com
+      - +.youtube.com
+      - +.x.com
+      - +.github.com
+  proxy-server-nameserver:
+    - 'https://doh.pub/dns-query'
+    - 'https://dns.alidns.com/dns-query'
+    - 'tls://223.5.5.5'
+
+tun:
+  enable: true
+  stack: system
+  auto-route: true
+  auto-detect-interface: true
+  strict-route: true
+  dns-hijack:
+    - 'any:53'
+  device: WYW_Tunnel
+  mtu: 1500
+  endpoint-independent-nat: true
 
 proxies:
   - name: AWS-JP
@@ -34,19 +107,49 @@ proxies:
       public-key: Dd6_aiROPgu9IpEf9tdqJw_ZmqtQ6AQs4PIE72ZQXFo
       short-id: 0123456789abcdef
 
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - AWS-JP
+
+rule-providers:
+  China-Site:
+    type: http
+    behavior: domain
+    format: mrs
+    url: 'https://cdn.jsdmirror.com/gh/HosheaPDNX/rule-set@V2.0.0/mihomo/China/China-Site.mrs'
+    path: ./ruleset/China-Site.mrs
+    proxy: DIRECT
+    interval: 86400
+  China-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: 'https://cdn.jsdmirror.com/gh/HosheaPDNX/rule-set@V2.0.0/mihomo/China/China-IP.mrs'
+    path: ./ruleset/China-IP.mrs
+    proxy: DIRECT
+    interval: 86400
+  GFWList-Site:
+    type: http
+    behavior: domain
+    format: mrs
+    url: 'https://cdn.jsdmirror.com/gh/HosheaPDNX/rule-set@V2.0.0/mihomo/GFWList/GFWList-Site.mrs'
+    path: ./ruleset/GFWList-Site.mrs
+    proxy: DIRECT
+    interval: 86400
+  Local-IP:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    url: 'https://cdn.jsdmirror.com/gh/HosheaPDNX/rule-set@V2.0.0/mihomo/Local/Local-IP.mrs'
+    path: ./ruleset/Local-IP.mrs
+    proxy: DIRECT
+    interval: 86400
+
 rules:
-
-  # 局域网直连
-  - IP-CIDR,127.0.0.0/8,DIRECT
-  - IP-CIDR,10.0.0.0/8,DIRECT
-  - IP-CIDR,172.16.0.0/12,DIRECT
-  - IP-CIDR,192.168.0.0/16,DIRECT
-
-  # 中国域名直连
-  - GEOSITE,CN,DIRECT
-
-  # 中国 IP 直连
-  - GEOIP,CN,DIRECT
-
-  # 其他全部走 AWS-JP
+  - RULE-SET,Local-IP,DIRECT,no-resolve
+  - RULE-SET,GFWList-Site,AWS-JP
+  - RULE-SET,China-Site,DIRECT
+  - RULE-SET,China-IP,DIRECT
   - MATCH,AWS-JP
