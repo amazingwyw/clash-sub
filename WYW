@@ -19,7 +19,7 @@ dns:
     geoip-code: CN
 
 proxies:
-  - name: VPS
+  - name: AWS-JP
     type: vless
     server: 43.206.96.24
     port: 443
@@ -34,16 +34,9 @@ proxies:
       public-key: Dd6_aiROPgu9IpEf9tdqJw_ZmqtQ6AQs4PIE72ZQXFo
       short-id: 0123456789abcdef
 
-proxy-groups:
-  - name: Proxy
-    type: select
-    proxies:
-      - VPS
-      - DIRECT
-
 rules:
 
-  # 禁止 QUIC（提高稳定性）
+  # 禁止 QUIC（防止绕过）
   - AND,((NETWORK,udp),(DST-PORT,443)),REJECT
 
   # 局域网直连
@@ -52,11 +45,11 @@ rules:
   - IP-CIDR,172.16.0.0/12,DIRECT
   - IP-CIDR,192.168.0.0/16,DIRECT
 
-  # 中国网站直连
+  # 中国域名直连
   - GEOSITE,CN,DIRECT
 
-  # 中国IP直连
+  # 中国 IP 直连
   - GEOIP,CN,DIRECT
 
-  # 其余全部走代理
-  - MATCH,Proxy
+  # 其他全部走 AWS-JP
+  - MATCH,AWS-JP
